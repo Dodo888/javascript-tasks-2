@@ -1,24 +1,73 @@
 'use strict';
 
-var phoneBook; // Здесь вы храните записи как хотите
+var phoneBook = []; // Здесь вы храните записи как хотите
 
 /*
-   Функция добавления записи в телефонную книгу.
-   На вход может прийти что угодно, будьте осторожны.
+    Функция добавления записи в телефонную книгу.
+    На вход может прийти что угодно, будьте осторожны.
 */
 module.exports.add = function add(name, phone, email) {
-
-    // Ваша невероятная магия здесь
-
+    var isEmailValid = ((email.indexOf('@') !== -1) &&
+                        (email.indexOf('@') === email.lastIndexOf('@')) &&
+                        (email.indexOf('.') !== -1));
+    var isPhoneValid = false;
+    if (isEmailValid) {
+        var phoneInFormat = checkPhoneValidity(phone);
+        isPhoneValid = phoneInFormat !== 'Invalid';
+    }
+    if (isEmailValid && isPhoneValid) {
+        phoneBook.push({name: name, phone: phoneInFormat, email: email});
+    }
+    return (isEmailValid && isPhoneValid);
 };
+
+/*
+    Функция проверки валидности телефонного номера.
+*/
+function checkPhoneValidity(phone) {
+    var count;
+    var phoneInFormat = '';
+    var areBracketsOpened = false;
+    var numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    var validSymbols = ['(', ')', ' ', '-', '+'];
+    for (count = 0; count < phone.length; count++) {
+        if ((numbers.indexOf(phone[count]) === -1) &&
+            (validSymbols.indexOf(phone[count]) === -1)) {
+            return 'Invalid';
+        }
+        if (numbers.indexOf(phone[count]) !== -1) {
+            phoneInFormat = phoneInFormat + phone[count];
+        }
+        if (phone[count] === '(') {
+            if (phoneInFormat.length === 1) {
+                areBracketsOpened = true;
+            } else {
+                return 'Invalid';
+            }
+        }
+        if ((phone[count] === ')' && (!areBracketsOpened || phoneInFormat.length !== 4)) ||
+            (phone[count] === '+' && phoneInFormat.length > 0) ||
+            (phone[count] === '-' && phoneInFormat.length < 6)) {
+            return 'Invalid';
+        }
+    }
+    phoneInFormat = (phoneInFormat.length === 10) ? '+7' + phoneInFormat : '+' + phoneInFormat;
+    return phoneInFormat;
+}
 
 /*
    Функция поиска записи в телефонную книгу.
    Поиск ведется по всем полям.
 */
 module.exports.find = function find(query) {
-
-    // Ваша удивительная магия здесь
+    var currentRecord;
+    for (currentRecord = 0; currentRecord < phoneBook.length; currentRecord++) {
+        if (isRecordSuitable(phoneBook[currentRecord], query)) {
+            console.log(phoneBook[currentRecord].name + ', ' +
+                        phoneBook[currentRecord].phone + ', ' +
+                        phoneBook[currentRecord].email);
+        }
+    }
 
 };
 
@@ -26,27 +75,86 @@ module.exports.find = function find(query) {
    Функция удаления записи в телефонной книге.
 */
 module.exports.remove = function remove(query) {
-
-    // Ваша необьяснимая магия здесь
-
+    var currentRecord;
+    var newPhoneBook = [];
+    var deletedRecordsAmount = 0;
+    for (currentRecord = 0; currentRecord < phoneBook.length; currentRecord++) {
+        if (!isRecordSuitable(phoneBook[currentRecord], query)) {
+            newPhoneBook.push(phoneBook[currentRecord]);
+        } else {
+            deletedRecordsAmount++;
+        }
+    }
+    phoneBook = newPhoneBook;
+    console.log(deletedRecordsAmount + ' records deleted');
 };
+
+/*
+   Функция проверки, удовлетворяет ли запись запросу.
+*/
+function isRecordSuitable(record, query) {
+    var currentField;
+    var fields = Object.keys(record);
+    for (currentField = 0; currentField < fields.length; currentField++) {
+        if (record[fields[currentField]].indexOf(query) !== -1) {
+            return true;
+        }
+    }
+    return false;
+}
 
 /*
    Функция импорта записей из файла (задача со звёздочкой!).
 */
 module.exports.importFromCsv = function importFromCsv(filename) {
     var data = require('fs').readFileSync(filename, 'utf-8');
-
-    // Ваша чёрная магия:
-    // - Разбираете записи из `data`
-    // - Добавляете каждую запись в книгу
+    var records = data.split('\r\n');
+    var currentRecord;
+    var addedRecordsAmount = 0;
+    for (currentRecord = 0; currentRecord < records.length; currentRecord++) {
+        var wasAdded = false;
+        if (records[currentRecord].indexOf(';') !== -1) {
+            var fields = records[currentRecord].split(';');
+            wasAdded = module.exports.add(fields[0], fields[1], fields[2]);
+            if (wasAdded) {
+                addedRecordsAmount++;
+            }
+        }
+    }
+    console.log(addedRecordsAmount + ' records added');
 };
 
+var tableHeader = ['┌────────────────────────┬────────────────────────┬────────────────────────┐',
+                   '│ Имя                    │ Телефон                │ email                  │',
+                   '├────────────────────────┼────────────────────────┼────────────────────────┤'];
+var tableFooter = ['└────────────────────────┴────────────────────────┴────────────────────────┘'];
 /*
    Функция вывода всех телефонов в виде ASCII (задача со звёздочкой!).
 */
 module.exports.showTable = function showTable() {
-
-    // Ваша чёрная магия здесь
+    var line;
+    for (line = 0; line < tableHeader.length; line++) {
+        console.log(tableHeader[line]);
+    }
+    var currentRecord;
+    for (currentRecord = 0; currentRecord < phoneBook.length; currentRecord++) {
+        var spacesAmount = 0;
+        var recordString = '';
+        var fields = ['name', 'phone', 'email'];
+        var currentField;
+        for (currentField = 0; currentField < fields.length; currentField++) {
+            recordString += '│ ' + phoneBook[currentRecord][fields[currentField]];
+            for (spacesAmount = 0;
+                 spacesAmount < 23 - (phoneBook[currentRecord][fields[currentField]]).length;
+                 spacesAmount++) {
+                recordString += ' ';
+            }
+        }
+        recordString += '│';
+        console.log(recordString);
+    }
+    for (line = 0; line < tableFooter.length; line++) {
+        console.log(tableFooter[line]);
+    }
 
 };
