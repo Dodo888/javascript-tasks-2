@@ -60,6 +60,8 @@ function checkPhoneValidity(phone) {
    Поиск ведется по всем полям.
 */
 module.exports.find = function find(query) {
+    if (query == null)
+        query = "";
     var currentRecord;
     for (currentRecord = 0; currentRecord < phoneBook.length; currentRecord++) {
         if (isRecordSuitable(phoneBook[currentRecord], query)) {
@@ -124,18 +126,23 @@ module.exports.importFromCsv = function importFromCsv(filename) {
     console.log(addedRecordsAmount + ' records added');
 };
 
-var tableHeader = ['┌────────────────────────┬────────────────────────┬────────────────────────┐',
-                   '│ Имя                    │ Телефон                │ email                  │',
-                   '├────────────────────────┼────────────────────────┼────────────────────────┤'];
-var tableFooter = ['└────────────────────────┴────────────────────────┴────────────────────────┘'];
+var tableHeader = [
+    '┌────────────────────────┬────────────────────────┬────────────────────────┐',
+    '│ Имя                    │ Телефон                │ email                  │',
+    '├────────────────────────┼────────────────────────┼────────────────────────┤'
+];
+var tableFooter = [
+    '└────────────────────────┴────────────────────────┴────────────────────────┘'
+];
+
 /*
    Функция вывода всех телефонов в виде ASCII (задача со звёздочкой!).
 */
+
+var COLUMN_WIDTH = 23;
 module.exports.showTable = function showTable() {
     var line;
-    for (line = 0; line < tableHeader.length; line++) {
-        console.log(tableHeader[line]);
-    }
+    console.log(tableHeader.join('\n'));
     var currentRecord;
     for (currentRecord = 0; currentRecord < phoneBook.length; currentRecord++) {
         var spacesAmount = 0;
@@ -145,7 +152,7 @@ module.exports.showTable = function showTable() {
         for (currentField = 0; currentField < fields.length; currentField++) {
             recordString += '│ ' + phoneBook[currentRecord][fields[currentField]];
             for (spacesAmount = 0;
-                 spacesAmount < 23 - (phoneBook[currentRecord][fields[currentField]]).length;
+                 spacesAmount < COLUMN_WIDTH - (phoneBook[currentRecord][fields[currentField]]).length;
                  spacesAmount++) {
                 recordString += ' ';
             }
@@ -153,8 +160,6 @@ module.exports.showTable = function showTable() {
         recordString += '│';
         console.log(recordString);
     }
-    for (line = 0; line < tableFooter.length; line++) {
-        console.log(tableFooter[line]);
-    }
+    console.log(tableFooter[0]);
 
 };
