@@ -13,10 +13,15 @@ module.exports.add = function add(name, phone, email) {
     var isPhoneValid = false;
     if (isEmailValid) {
         var phoneInFormat = checkPhoneValidity(phone);
+        var phoneWithSpaces = phoneInFormat.substr(0, 2) + ' (' +
+            phoneInFormat.substr(2, 3) + ') ' +
+            phoneInFormat.substr(5, 3) + '-' +
+            phoneInFormat.substr(8, 1) + '-' +
+            phoneInFormat.substr(9);
         isPhoneValid = phoneInFormat !== 'Invalid';
     }
     if (isEmailValid && isPhoneValid) {
-        phoneBook.push({name: name, phone: phoneInFormat, email: email});
+        phoneBook.push({name: name, phone: phoneInFormat, phone2: phoneWithSpaces, email: email});
     }
     return (isEmailValid && isPhoneValid);
 };
@@ -50,6 +55,12 @@ function checkPhoneValidity(phone) {
             (phone[count] === '-' && phoneInFormat.length < 6)) {
             return 'Invalid';
         }
+        if (phone[count] === ')') {
+            areBracketsOpened = false;
+        }
+    }
+    if (areBracketsOpened) {
+        return 'Invalid';
     }
     phoneInFormat = (phoneInFormat.length === 10) ? '+7' + phoneInFormat : '+' + phoneInFormat;
     return phoneInFormat;
@@ -60,13 +71,14 @@ function checkPhoneValidity(phone) {
    Поиск ведется по всем полям.
 */
 module.exports.find = function find(query) {
-    if (query == null)
-        query = "";
+    if (query == null) {
+        query = '';
+    }
     var currentRecord;
     for (currentRecord = 0; currentRecord < phoneBook.length; currentRecord++) {
         if (isRecordSuitable(phoneBook[currentRecord], query)) {
             console.log(phoneBook[currentRecord].name + ', ' +
-                        phoneBook[currentRecord].phone + ', ' +
+                        phoneBook[currentRecord].phone2 + ', ' +
                         phoneBook[currentRecord].email);
         }
     }
@@ -147,12 +159,13 @@ module.exports.showTable = function showTable() {
     for (currentRecord = 0; currentRecord < phoneBook.length; currentRecord++) {
         var spacesAmount = 0;
         var recordString = '';
-        var fields = ['name', 'phone', 'email'];
+        var fields = ['name', 'phone2', 'email'];
         var currentField;
         for (currentField = 0; currentField < fields.length; currentField++) {
             recordString += '│ ' + phoneBook[currentRecord][fields[currentField]];
             for (spacesAmount = 0;
-                 spacesAmount < COLUMN_WIDTH - (phoneBook[currentRecord][fields[currentField]]).length;
+                 spacesAmount < COLUMN_WIDTH -
+                    (phoneBook[currentRecord][fields[currentField]]).length;
                  spacesAmount++) {
                 recordString += ' ';
             }
