@@ -7,23 +7,27 @@ var phoneBook = []; // Здесь вы храните записи как хот
     На вход может прийти что угодно, будьте осторожны.
 */
 module.exports.add = function add(name, phone, email) {
+    var isNameValid = (name.length > 0);
     var isEmailValid = ((email.indexOf('@') !== -1) &&
                         (email.indexOf('@') === email.lastIndexOf('@')) &&
                         (email.indexOf('.') !== -1));
     var isPhoneValid = false;
     if (isEmailValid) {
         var phoneInFormat = checkPhoneValidity(phone);
-        var phoneWithSpaces = phoneInFormat.substr(0, 2) + ' (' +
-            phoneInFormat.substr(2, 3) + ') ' +
-            phoneInFormat.substr(5, 3) + '-' +
-            phoneInFormat.substr(8, 1) + '-' +
-            phoneInFormat.substr(9);
-        isPhoneValid = phoneInFormat !== 'Invalid';
+        if (phoneInFormat) {
+        var phoneLength = phoneInFormat.length;
+        var phoneWithSpaces = phoneInFormat.slice(0, phoneLength-10) + ' (' +
+            phoneInFormat.substr(phoneLength-10, 3) + ') ' +
+            phoneInFormat.substr(phoneLength-7, 3) + '-' +
+            phoneInFormat.substr(phoneLength-4, 1) + '-' +
+            phoneInFormat.substr(phoneLength-3);
+        isPhoneValid = phoneInFormat;
     }
-    if (isEmailValid && isPhoneValid) {
+    }
+    if (isNameValid && isEmailValid && isPhoneValid) {
         phoneBook.push({name: name, phone: phoneInFormat, phone2: phoneWithSpaces, email: email});
     }
-    return (isEmailValid && isPhoneValid);
+    return isNameValid && isEmailValid && isPhoneValid;
 };
 
 /*
@@ -38,7 +42,7 @@ function checkPhoneValidity(phone) {
     for (count = 0; count < phone.length; count++) {
         if ((numbers.indexOf(phone[count]) === -1) &&
             (validSymbols.indexOf(phone[count]) === -1)) {
-            return 'Invalid';
+            return null;
         }
         if (numbers.indexOf(phone[count]) !== -1) {
             phoneInFormat = phoneInFormat + phone[count];
@@ -47,20 +51,20 @@ function checkPhoneValidity(phone) {
             if (phoneInFormat.length === 1) {
                 areBracketsOpened = true;
             } else {
-                return 'Invalid';
+                return null;
             }
         }
         if ((phone[count] === ')' && (!areBracketsOpened || phoneInFormat.length !== 4)) ||
             (phone[count] === '+' && phoneInFormat.length > 0) ||
             (phone[count] === '-' && phoneInFormat.length < 6)) {
-            return 'Invalid';
+            return null;
         }
         if (phone[count] === ')') {
             areBracketsOpened = false;
         }
     }
     if (areBracketsOpened) {
-        return 'Invalid';
+        return null;
     }
     phoneInFormat = (phoneInFormat.length === 10) ? '+7' + phoneInFormat : '+' + phoneInFormat;
     return phoneInFormat;
@@ -71,7 +75,7 @@ function checkPhoneValidity(phone) {
    Поиск ведется по всем полям.
 */
 module.exports.find = function find(query) {
-    if (query == null) {
+    if (!query) {
         query = '';
     }
     var currentRecord;
@@ -107,9 +111,8 @@ module.exports.remove = function remove(query) {
    Функция проверки, удовлетворяет ли запись запросу.
 */
 function isRecordSuitable(record, query) {
-    var currentField;
     var fields = Object.keys(record);
-    for (currentField = 0; currentField < fields.length; currentField++) {
+    for (var currentField = 0; currentField < fields.length; currentField++) {
         if (record[fields[currentField]].indexOf(query) !== -1) {
             return true;
         }
