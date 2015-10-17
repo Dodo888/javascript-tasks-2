@@ -15,14 +15,14 @@ module.exports.add = function add(name, phone, email) {
     if (isEmailValid) {
         var phoneInFormat = checkPhoneValidity(phone);
         if (phoneInFormat) {
-        var phoneLength = phoneInFormat.length;
-        var phoneWithSpaces = phoneInFormat.slice(0, phoneLength-10) + ' (' +
-            phoneInFormat.substr(phoneLength-10, 3) + ') ' +
-            phoneInFormat.substr(phoneLength-7, 3) + '-' +
-            phoneInFormat.substr(phoneLength-4, 1) + '-' +
-            phoneInFormat.substr(phoneLength-3);
-        isPhoneValid = phoneInFormat;
-    }
+            var phoneLength = phoneInFormat.length;
+            var phoneWithSpaces = phoneInFormat.slice(0, phoneLength - 10) + ' (' +
+                phoneInFormat.substr(phoneLength - 10, 3) + ') ' +
+                phoneInFormat.substr(phoneLength - 7, 3) + '-' +
+                phoneInFormat.substr(phoneLength - 4, 1) + '-' +
+                phoneInFormat.substr(phoneLength - 3);
+            isPhoneValid = phoneInFormat;
+        }
     }
     if (isNameValid && isEmailValid && isPhoneValid) {
         phoneBook.push({name: name, phone: phoneInFormat, phone2: phoneWithSpaces, email: email});
@@ -63,7 +63,7 @@ function checkPhoneValidity(phone) {
             areBracketsOpened = false;
         }
     }
-    if (areBracketsOpened) {
+    if (areBracketsOpened || phoneInFormat.length < 10) {
         return null;
     }
     phoneInFormat = (phoneInFormat.length === 10) ? '+7' + phoneInFormat : '+' + phoneInFormat;
@@ -129,10 +129,9 @@ module.exports.importFromCsv = function importFromCsv(filename) {
     var currentRecord;
     var addedRecordsAmount = 0;
     for (currentRecord = 0; currentRecord < records.length; currentRecord++) {
-        var wasAdded = false;
         if (records[currentRecord].indexOf(';') !== -1) {
             var fields = records[currentRecord].split(';');
-            wasAdded = module.exports.add(fields[0], fields[1], fields[2]);
+            var wasAdded = module.exports.add(fields[0], fields[1], fields[2]);
             if (wasAdded) {
                 addedRecordsAmount++;
             }
